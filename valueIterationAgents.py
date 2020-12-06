@@ -42,18 +42,21 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.discount = discount
         self.iterations = iterations
         self.values = util.Counter() # A Counter is a dict with default 0
+
+        # Write value iteration code here
+        "*** YOUR CODE HERE ***"
         states = mdp.getStates()
 
-        for i in range(0,iterations):
-            new_values = util.Counter()
-            for state in states:
-                action = self.getAction(state) # Pick the best action using the policy.
-                if action is not None:
-                    # Get the value from the state, using the maxium utility from the best q-state.
-                    new_values[state] = self.getQValue(state, action)
+        for i in range(iterations):
+          copy_values = util.Counter()
 
-            self.values = new_values
+          for state in states:                  # We use the policy to `pick the best action fro each state
+            best_action = self.getAction(state)
 
+            if best_action is not None:
+              copy_values[state] = self.getQValue(state, best_action)
+
+          self.values = copy_values
 
     def getValue(self, state):
         """
@@ -66,48 +69,46 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
           Compute the Q-value of action in state from the
           value function stored in self.values.
-          
-          Q*(s,a) = sum[s'] T(s,a,s')[R(s,a,s')+a.V_{k}(s)]
         """
-        total = 0
-        transStatesAndProbs = self.mdp.getTransitionStatesAndProbs(state, action)
+        "*** YOUR CODE HERE ***"
+        q_value = 0
+        tsps = self.mdp.getTransitionStatesAndProbs(state, action)
         
-        for tranStateAndProb in transStatesAndProbs:
-            tstate = tranStateAndProb[0]
-            prob = tranStateAndProb[1]
-            reward = self.mdp.getReward(state, action, tstate)
-            value = self.getValue(tstate)
-            total += prob * (reward + self.discount * value)
+        for tsp in tsps:
+          ts = tsp[0]
+          p = tsp[1]
+          reward = self.mdp.getReward(state, action, ts)
+          value = self.getValue(ts)
+          q_value += p * (reward + self.discount * value)
             
-        return total
-        util.raiseNotDefined()
+        return q_value
 
     def computeActionFromValues(self, state):
         """
           The policy is the best action in the given state
           according to the values currently stored in self.values.
+
           You may break ties any way you see fit.  Note that if
           there are no legal actions, which is the case at the
           terminal state, you should return None.
-          
-          V_{k+1}(s) = max[a] Q*(s,a)
         """
+        "*** YOUR CODE HERE ***"
         if self.mdp.isTerminal(state):
-            return None
-        else:
-            actions = self.mdp.getPossibleActions(state)
-            max_value = self.getQValue(state, actions[0])
-            max_action = actions[0]
-            
-            for action in actions:
-                value = self.getQValue(state, action)
-                if max_value <= value:
-                    max_value = value
-                    max_action = action
+          return None
 
-            return max_action
+        else:
+          pos_actions = self.mdp.getPossibleActions(state)
+          max_q_value = self.getQValue(state, pos_actions[0])
+          max_action = pos_actions[0]
             
-        util.raiseNotDefined()
+          for action in pos_actions:
+            value = self.getQValue(state, action)
+
+            if max_q_value <= value:
+              max_q_value = value
+              max_action = action
+
+          return max_action
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
